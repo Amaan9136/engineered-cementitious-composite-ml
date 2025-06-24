@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECC Concrete Strength Prediction System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="main-title">🏗️ ECC Concrete Strength Prediction System</h1>
+            <p class="subtitle">Advanced Machine Learning Models for Engineered Cementitious Composites</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <main>
+            <!-- System Status Dashboard -->
+            <div class="card status-dashboard">
+                <h2>📊 System Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Available Datasets:</span>
+                        <span class="status-value" id="dataset-count">2</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Trained Models:</span>
+                        <span class="status-value" id="trained-models-count">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Current Dataset:</span>
+                        <span class="status-value" id="current-dataset">None</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">System Status:</span>
+                        <span class="status-value status-ready" id="system-status">Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dataset Selection and Training -->
+            <div class="card dataset-section">
+                <h2>🎯 Dataset Selection & Model Training</h2>
+                <p class="section-description">Select a dataset and train multiple regression models for concrete strength prediction</p>
+                
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="dataset-select" class="form-label">
+                            <strong>Choose Dataset:</strong>
+                            <span class="help-text">Select the dataset that matches your concrete mix design</span>
+                        </label>
+                        <select id="dataset-select" name="dataset" class="form-control">
+                            <option value="">Select a dataset...</option>
+                            <option value="sample_data.csv">Dataset 1 - Standard ECC Mix Design</option>
+                            <option value="SCM-based-concrete-formated.csv">Dataset 2 - SCM-based ECC Mix (Global)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="dataset-info" id="dataset-info" style="display: none;">
+                        <h4>Dataset Information:</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Features:</strong> 13 input parameters including cement, SCM, aggregates, and fiber properties
+                            </div>
+                            <div class="info-item">
+                                <strong>Target:</strong> Compressive strength (MPa)
+                            </div>
+                            <div class="info-item">
+                                <strong>Models:</strong> 14 different regression algorithms available
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-primary btn-large" onclick="trainModels()">
+                        <span class="btn-icon">🚀</span>
+                        Train All Models
+                        <span class="btn-subtitle">This may take a few minutes</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="refreshStatus()">
+                        <span class="btn-icon">🔄</span>
+                        Refresh Status
+                    </button>
+                </div>
+                
+                <div id="training-progress" class="progress-section" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">Initializing training...</p>
+                </div>
+                
+                <div id="training-results" class="results-section"></div>
+            </div>
+
+            <!-- Prediction Form -->
+            <div class="card prediction-section">
+                <h2>🔮 Concrete Strength Prediction</h2>
+                <p class="section-description">Enter your mix design parameters to predict the compressive strength</p>
+                
+                <div class="prediction-tabs">
+                    <button class="tab-button active" onclick="showTab('single-prediction')">Single Model Prediction</button>
+                    <button class="tab-button" onclick="showTab('all-predictions')">Compare All Models</button>
+                </div>
+
+                <!-- Single Model Prediction -->
+                <div id="single-prediction" class="tab-content active">
+                    <form id="prediction-form" action="/predict" method="POST">
+                        <div class="form-sections">
+                            <!-- Cementitious Materials -->
+                            <div class="form-section">
+                                <h3 class="section-title">🏭 Cementitious Materials</h3>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="cement" class="form-label">
+                                            Cement OPC (kg/m³)
+                                            <span class="help-icon" title="Ordinary Portland Cement content">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="cement" name="cement" step="0.1" value="400" min="0" max="1000" required class="form-control">
+                                        <span class="input-hint">Typical range: 200-600 kg/m³</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="fly_ash" class="form-label">
+                                            SCM Fly Ash (kg/m³)
+                                            <span class="help-icon" title="Supplementary Cementitious Material - Fly Ash">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="fly_ash" name="fly_ash" step="0.1" value="400" min="0" max="800" class="form-control">
+                                        <span class="input-hint">Typical range: 0-600 kg/m³</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="ggbs" class="form-label">
+                                            SCM GGBS (kg/m³)
+                                            <span class="help-icon" title="Ground Granulated Blast-furnace Slag">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="ggbs" name="ggbs" step="0.1" value="0" min="0" max="600" class="form-control">
+                                        <span class="input-hint">Typical range: 0-400 kg/m³</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aggregates -->
+                            <div class="form-section">
+                                <h3 class="section-title">🪨 Aggregates</h3>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="silica_sand" class="form-label">
+                                            Silica Sand (kg/m³)
+                                            <span class="help-icon" title="High-quality silica sand">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="silica_sand" name="silica_sand" step="0.1" value="450" min="0" max="800" class="form-control">
+                                        <span class="input-hint">Typical range: 300-600 kg/m³</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="sand" class="form-label">
+                                            Locally Available Sand (kg/m³)
+                                            <span class="help-icon" title="Local fine aggregate">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="sand" name="sand" step="0.1" value="450" min="0" max="800" class="form-control">
+                                        <span class="input-hint">Typical range: 300-600 kg/m³</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mix Ratios -->
+                            <div class="form-section">
+                                <h3 class="section-title">⚖️ Mix Ratios</h3>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="water_binder" class="form-label">
+                                            W/B Ratio
+                                            <span class="help-icon" title="Water to Binder ratio">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="water_binder" name="water_binder" step="0.01" value="0.3" min="0.2" max="0.6" required class="form-control">
+                                        <span class="input-hint">Typical range: 0.25-0.45</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="hrwr_binder" class="form-label">
+                                            HRWR/B Ratio
+                                            <span class="help-icon" title="High Range Water Reducer to Binder ratio">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="hrwr_binder" name="hrwr_binder" step="0.001" value="0.012" min="0" max="0.05" required class="form-control">
+                                        <span class="input-hint">Typical range: 0.005-0.025</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fiber Properties -->
+                            <div class="form-section">
+                                <h3 class="section-title">🧵 Fiber Properties</h3>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="fiber_volume" class="form-label">
+                                            Fiber Percentage (%)
+                                            <span class="help-icon" title="Volume percentage of fibers">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="fiber_volume" name="fiber_volume" step="0.1" value="2.0" min="0" max="5" required class="form-control">
+                                        <span class="input-hint">Typical range: 1.0-3.0%</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="aspect_ratio" class="form-label">
+                                            Aspect Ratio
+                                            <span class="help-icon" title="Length to diameter ratio of fibers">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="aspect_ratio" name="aspect_ratio" step="0.1" value="300" min="50" max="500" required class="form-control">
+                                        <span class="input-hint">Typical range: 200-400</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="tensile_strength" class="form-label">
+                                            Tensile Strength (MPa)
+                                            <span class="help-icon" title="Fiber tensile strength">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="tensile_strength" name="tensile_strength" step="0.1" value="2800" min="1000" max="4000" required class="form-control">
+                                        <span class="input-hint">Typical range: 2000-3500 MPa</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="density" class="form-label">
+                                            Density (kg/m³)
+                                            <span class="help-icon" title="Fiber density">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="density" name="density" step="0.1" value="1300" min="800" max="2000" required class="form-control">
+                                        <span class="input-hint">Typical range: 1200-1500 kg/m³</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="youngs_modulus" class="form-label">
+                                            Young's Modulus (GPa)
+                                            <span class="help-icon" title="Fiber modulus of elasticity">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="youngs_modulus" name="youngs_modulus" step="0.1" value="240" min="100" max="400" required class="form-control">
+                                        <span class="input-hint">Typical range: 200-300 GPa</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="elongation" class="form-label">
+                                            Elongation (%)
+                                            <span class="help-icon" title="Fiber elongation at break">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="elongation" name="elongation" step="0.1" value="3.2" min="1" max="10" required class="form-control">
+                                        <span class="input-hint">Typical range: 2.0-5.0%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Model Selection & Validation -->
+                            <div class="form-section">
+                                <h3 class="section-title">🤖 Model Selection & Validation</h3>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="model_type" class="form-label">
+                                            Select Prediction Model
+                                            <span class="help-icon" title="Choose the machine learning model for prediction">ℹ️</span>
+                                        </label>
+                                        <select id="model_type" name="model_type" required class="form-control">
+                                            <optgroup label="Ensemble Models (Recommended)">
+                                                <option value="random_forest">Random Forest</option>
+                                                <option value="xgboost">XGBoost</option>
+                                                <option value="lightgbm">LightGBM</option>
+                                                <option value="gradient_boosting">Gradient Boosting</option>
+                                                <option value="extra_trees">Extra Trees</option>
+                                                <option value="ada_boost">AdaBoost</option>
+                                                <option value="bagging">Bagging Regressor</option>
+                                            </optgroup>
+                                            <optgroup label="Tree-based Models">
+                                                <option value="decision_tree">Decision Tree</option>
+                                            </optgroup>
+                                            <optgroup label="Linear Models">
+                                                <option value="linear_regression">Linear Regression</option>
+                                                <option value="ridge_regression">Ridge Regression</option>
+                                                <option value="lasso_regression">Lasso Regression</option>
+                                                <option value="elastic_net">Elastic Net</option>
+                                            </optgroup>
+                                            <optgroup label="Other Models">
+                                                <option value="svr">Support Vector Regression</option>
+                                                <option value="knn_regression">K-Nearest Neighbors</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group full-width">
+                                        <label for="experimental" class="form-label">
+                                            Experimental Value (Optional, MPa)
+                                            <span class="help-icon" title="Enter actual test value to compare prediction accuracy">ℹ️</span>
+                                        </label>
+                                        <input type="number" id="experimental" name="experimental" step="0.1" min="0" max="200" placeholder="Enter if you want to compare prediction vs actual" class="form-control">
+                                        <span class="input-hint">Optional: Enter actual test result for comparison</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <span class="btn-icon">🎯</span>
+                                Predict Strength
+                                <span class="btn-subtitle">Get single model prediction</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                                <span class="btn-icon">🔄</span>
+                                Reset Form
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="loadPresetMix()">
+                                <span class="btn-icon">⚡</span>
+                                Load Preset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- All Models Prediction -->
+                <div id="all-predictions" class="tab-content">
+                    <form id="prediction-form-all" action="/predict_all" method="POST">
+                        <p class="info-message">
+                            <strong>Compare All Models:</strong> This will run prediction using all trained models and show comparative results.
+                            Use the same form above to input parameters, then click the button below.
+                        </p>
+                        
+                        <div class="button-group">
+                            <button type="button" class="btn btn-primary btn-large" onclick="copyFormData()">
+                                <span class="btn-icon">📊</span>
+                                Compare All Models
+                                <span class="btn-subtitle">Get predictions from all trained models</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card quick-links">
+                <h2>🔗 Quick Actions</h2>
+                <div class="link-grid">
+                    <a href="/compare_models" class="quick-link">
+                        <span class="link-icon">📊</span>
+                        <div class="link-content">
+                            <strong>Model Comparison</strong>
+                            <span>Compare performance metrics</span>
+                        </div>
+                    </a>
+                    <button class="quick-link" onclick="exportResults()">
+                        <span class="link-icon">💾</span>
+                        <div class="link-content">
+                            <strong>Export Results</strong>
+                            <span>Download prediction data</span>
+                        </div>
+                    </button>
+                    <button class="quick-link" onclick="showHelp()">
+                        <span class="link-icon">❓</span>
+                        <div class="link-content">
+                            <strong>Help & Guide</strong>
+                            <span>Learn how to use the system</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Help Modal (Hidden by default) -->
+    <div id="help-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📚 User Guide</h2>
+                <span class="close" onclick="closeHelp()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>🎯 Getting Started</h3>
+                    <ol>
+                        <li>Select a dataset that matches your concrete type</li>
+                        <li>Click "Train All Models" to train machine learning models</li>
+                        <li>Enter your mix design parameters</li>
+                        <li>Choose a prediction model or compare all models</li>
+                        <li>Get your strength prediction results</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h3>📊 Understanding Results</h3>
+                    <ul>
+                        <li><strong>R² Score:</strong> Higher values (closer to 1) indicate better model fit</li>
+                        <li><strong>MAE:</strong> Mean Absolute Error - lower is better</li>
+                        <li><strong>RMSE:</strong> Root Mean Square Error - lower is better</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3>🔧 Best Practices</h3>
+                    <ul>
+                        <li>Use values within the typical ranges shown</li>
+                        <li>Ensemble models (Random Forest, XGBoost) usually give better results</li>
+                        <li>Compare multiple models for more reliable predictions</li>
+                        <li>Validate predictions with experimental results when possible</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+</body>
+</html>

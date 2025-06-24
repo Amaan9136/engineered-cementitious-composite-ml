@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results - ECC Strength Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .prediction-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .prediction-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .prediction-unit {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .model-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .comparison-section {
+            display: none;
+        }
+
+        .comparison-section.active {
+            display: block;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .error-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .error-low { background: #4CAF50; color: white; }
+        .error-medium { background: #FF9800; color: white; }
+        .error-high { background: #F44336; color: white; }
+
+        .visualization-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .visualization-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .mix-design-card {
+            grid-column: 1 / -1;
+        }
+
+        .mix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .mix-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mix-label {
+            font-weight: 500;
+        }
+
+        .mix-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .quality-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .quality-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .quality-excellent { background: #4CAF50; color: white; }
+        .quality-good { background: #8BC34A; color: white; }
+        .quality-fair { background: #FF9800; color: white; }
+        .quality-poor { background: #F44336; color: white; }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .prediction-value {
+                font-size: 2.5rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mix-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: #333;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Prediction Results</h1>
+            <a href="/" class="back-btn">← Back to Predictor</a>
+        </header>
+
+        <div class="results-grid">
+            <!-- Main Prediction Card -->
+            <div class="card">
+                <h2>🔮 Strength Prediction</h2>
+                <div class="prediction-display">
+                    <div class="prediction-value">{{ prediction }}</div>
+                    <div class="prediction-unit">MPa</div>
+                    <div class="model-info">
+                        <strong>Model:</strong> {{ model_type.replace('_', ' ').title() }}
+                    </div>
+                </div>
+                
+                <!-- Quality Assessment -->
+                <div class="quality-indicator">
+                    {% set strength = prediction %}
+                    {% if strength >= 70 %}
+                        <div class="quality-badge quality-excellent">Excellent Strength</div>
+                    {% elif strength >= 50 %}
+                        <div class="quality-badge quality-good">Good Strength</div>
+                    {% elif strength >= 30 %}
+                        <div class="quality-badge quality-fair">Fair Strength</div>
+                    {% else %}
+                        <div class="quality-badge quality-poor">Low Strength</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comparison Card (if experimental value provided) -->
+            {% if experimental %}
+            <div class="card">
+                <h2>📊 Comparison Analysis</h2>
+                <div class="comparison-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">{{ experimental }}</div>
+                        <div class="metric-label">Experimental (MPa)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">{{ "%.2f"|format((prediction - experimental|float)|abs) }}</div>
+                        <div class="metric-label">Absolute Error (MPa)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">{{ "%.1f"|format(((prediction - experimental|float) / experimental|float * 100)|abs) }}%</div>
+                        <div class="metric-label">Relative Error</div>
+                    </div>
+                </div>
+                
+                <div class="quality-indicator">
+                    {% set error_percent = ((prediction - experimental|float) / experimental|float * 100)|abs %}
+                    {% if error_percent <= 5 %}
+                        <div class="quality-badge quality-excellent">Excellent Prediction</div>
+                    {% elif error_percent <= 10 %}
+                        <div class="quality-badge quality-good">Good Prediction</div>
+                    {% elif error_percent <= 20 %}
+                        <div class="quality-badge quality-fair">Fair Prediction</div>
+                    {% else %}
+                        <div class="quality-badge quality-poor">Poor Prediction</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Visualization -->
+        {% if plot_url %}
+        <div class="card">
+            <h2>📈 Visualization</h2>
+            <div class="visualization-container">
+                <img src="{{ plot_url }}" alt="Prediction Visualization">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Mix Design Summary -->
+        <div class="card mix-design-card">
+            <h2>🧪 Mix Design Summary</h2>
+            <div class="mix-grid">
+                {% for key, value in features.items() %}
+                <div class="mix-item">
+                    <span class="mix-label">
+                        {% if key == 'cement_opc' %}Cement OPC (kg/m³)
+                        {% elif key == 'scm_flyash' %}SCM Fly Ash (kg/m³)
+                        {% elif key == 'scm_ggbs' %}SCM GGBS (kg/m³)
+                        {% elif key == 'silica_sand' %}Silica Sand (kg/m³)
+                        {% elif key == 'locally_avail_sand' %}Local Sand (kg/m³)
+                        {% elif key == 'w_b' %}W/B Ratio
+                        {% elif key == 'hrwr_b' %}HRWR/B Ratio
+                        {% elif key == 'perc_of_fibre' %}Fiber (%)
+                        {% elif key == 'aspect_ratio' %}Aspect Ratio
+                        {% elif key == 'tensile_strength' %}Tensile Strength (MPa)
+                        {% elif key == 'density' %}Density (kg/m³)
+                        {% elif key == 'youngs_modulus' %}Young's Modulus (GPa)
+                        {% elif key == 'elongation' %}Elongation (%)
+                        {% else %}{{ key.replace('_', ' ').title() }}
+                        {% endif %}
+                    </span>
+                    <span class="mix-value">{{ value }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+            <a href="/" class="btn btn-primary">🔄 New Prediction</a>
+            <a href="/compare_models" class="btn btn-secondary">📊 Compare Models</a>
+            <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Results</button>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on load
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Add tooltip for quality indicators
+            const qualityBadges = document.querySelectorAll('.quality-badge');
+            qualityBadges.forEach(badge => {
+                badge.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                });
+                badge.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+        });
+
+        // Print functionality
+        function printResults() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
